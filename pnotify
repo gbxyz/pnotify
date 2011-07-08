@@ -1,0 +1,120 @@
+#!/usr/bin/perl
+use Net::DNS;
+use Getopt::Long;
+use Pod::Usage;
+use strict;
+
+my ($zone, $server, $class, $tsig_name, $tsig_key, $timeout, $source, $help);
+GetOptions(
+	'zone=s'	=> \$zone,
+	'server=s'	=> \$server,
+	'class:s'	=> \$class,
+	'tsig-name:s'	=> \$tsig_name,
+	'tsig-key:s'	=> \$tsig_key,
+	'timeout'	=> \$timeout,
+	'source:s'	=> \$source,
+	'help'		=> \$help,
+) or pod2usage(1);
+
+pod2usage(1) if ($help);
+
+if ($zone eq '') {
+	print "pnotify: --zone argument is missing or empty\n";
+	pod2usage(1);
+}
+
+if ($server eq '') {
+	print "pnotify: --server argument is missing or empty\n";
+	pod2usage(1);
+}
+
+my $packet = Net::DNS::Packet->new($zone, 'SOA', ($class || 'IN'));
+$packet->header->opcode('NS_NOTIFY_OP');
+
+$packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
+
+my $resolver = Net::DNS::Resolver->new;
+$resolver->nameserver($server);
+$resolver->udp_timeout($timeout || 1);
+$resolver->srcaddr($source) if ($source ne '');
+
+my $answer = $resolver->send($packet);
+if ($answer) {
+	print $answer->header->rcode."\n";
+	exit($answer->header->rcode ne 'NOERROR');
+
+} else {
+	print "TIMEOUT\n";
+	exit(1);
+
+}
+
+__END__
+
+=head1 NAME
+
+pnotify - A simple Perl script for sending DNS NOTIFY packets with TSIG
+support.
+
+=head1 SYNOPSIS
+
+pnotfy [options]
+
+Options:
+
+	--zone=ZONE		The DNS zone
+	--class=CLASS		The class (default IN)
+	--server=HOST		Host to send the packet to
+	--timeout=TIMEOUT	Timeout in seconds (default 1)
+	--tsig-name=NAME	Optional TSIG name
+	--tsig-key=KEY		Optional TSIG KEY (only HMAC-MD5 is
+				supported)
+	--source=ADDR		Use this source address (optional)
+	--help			Show this help
+
+=head1 OUTPUT
+
+pnotify will print either the rcode of the server response or "TIMEOUT"
+to STDOUT.
+
+=head1 EXIT CODE
+
+For a successful transaction (rcode=NOERROR), the exit code will be 0.
+For all other outcomes it will be 1.
+
+=head1 RATIONALE
+
+It is sometimes useful to be able to manually send a NOTIFY packet to a
+DNS server. There are other tools to do this (eg nsd-notify(8)) but they
+are not as portable as pnotify, which is a pure Perl script with only a
+limited range of prerequisites.
+
+=head1 REQUIREMENTS
+
+=over
+
+=item * L<Net::DNS>
+
+=item * L<Getopt::Long>
+
+=item * L<Pod::Usage>
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright 2011 CentralNic Ltd. This program is Free Software, you can
+use it and/or modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+=over
+
+=item * L<Net::DNS>
+
+=item * L<https://www.centralnic.com/>
+
+=back
+
+=cut
+
