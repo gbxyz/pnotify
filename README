@@ -1,6 +1,6 @@
 NAME
-    pnotify - A simple Perl script for sending DNS NOTIFY packets with TSIG
-    support.
+    pnotify - A simple, portable Perl script for sending DNS NOTIFY packets
+    with TSIG support.
 
 SYNOPSIS
     pnotfy [options]

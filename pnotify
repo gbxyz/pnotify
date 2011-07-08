@@ -53,8 +53,8 @@ __END__
 
 =head1 NAME
 
-pnotify - A simple Perl script for sending DNS NOTIFY packets with TSIG
-support.
+pnotify - A simple, portable Perl script for sending DNS NOTIFY packets
+with TSIG support.
 
 =head1 SYNOPSIS
 
