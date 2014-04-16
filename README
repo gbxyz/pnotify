@@ -10,6 +10,8 @@ SYNOPSIS
             --zone=ZONE             The DNS zone
             --class=CLASS           The class (default IN)
             --server=HOST           Host to send the packet to
+            --port=PORT             Destination port to send the packet
+                                    to (default 53)
             --timeout=TIMEOUT       Timeout in seconds (default 1)
             --tsig-name=NAME        Optional TSIG name
             --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
