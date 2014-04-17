@@ -4,11 +4,12 @@ use Getopt::Long;
 use Pod::Usage;
 use strict;
 
-my ($zone, $server, $class, $tsig_name, $tsig_key, $timeout, $source, $help);
+my ($zone, $server, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $help);
 GetOptions(
 	'zone=s'	=> \$zone,
 	'server=s'	=> \$server,
 	'class:s'	=> \$class,
+	'port:s'	=> \$port,
 	'tsig-name:s'	=> \$tsig_name,
 	'tsig-key:s'	=> \$tsig_key,
 	'timeout'	=> \$timeout,
@@ -30,6 +31,9 @@ if ($server eq '') {
 
 my $packet = Net::DNS::Packet->new($zone, 'SOA', ($class || 'IN'));
 $packet->header->opcode('NS_NOTIFY_OP');
+$packet->header->aa(1);
+$packet->header->rd(0);
+$packet->header->rcode('NOERROR');
 
 $packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
 
@@ -37,6 +41,7 @@ my $resolver = Net::DNS::Resolver->new;
 $resolver->nameserver($server);
 $resolver->udp_timeout($timeout || 1);
 $resolver->srcaddr($source) if ($source ne '');
+$resolver->port($port // 53);
 
 my $answer = $resolver->send($packet);
 if ($answer) {
@@ -65,6 +70,7 @@ Options:
 	--zone=ZONE		The DNS zone
 	--class=CLASS		The class (default IN)
 	--server=HOST		Host to send the packet to
+	--port=PORT 		Destination port to send the packet to (default 53)
 	--timeout=TIMEOUT	Timeout in seconds (default 1)
 	--tsig-name=NAME	Optional TSIG name
 	--tsig-key=KEY		Optional TSIG KEY (only HMAC-MD5 is
