@@ -12,7 +12,7 @@ GetOptions(
 	'port:s'	=> \$port,
 	'tsig-name:s'	=> \$tsig_name,
 	'tsig-key:s'	=> \$tsig_key,
-	'timeout'	=> \$timeout,
+	'timeout:i'	=> \$timeout,
 	'source:s'	=> \$source,
 	'help'		=> \$help,
 ) or pod2usage(1);
