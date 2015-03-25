@@ -4,10 +4,11 @@ use Getopt::Long;
 use Pod::Usage;
 use strict;
 
-my ($zone, $server, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $help);
+my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $help);
 GetOptions(
 	'zone=s'	=> \$zone,
-	'server=s'	=> \$server,
+	'server:s'	=> \$server,
+	'srv:s'		=> \$srv,
 	'class:s'	=> \$class,
 	'port:s'	=> \$port,
 	'tsig-name:s'	=> \$tsig_name,
@@ -24,8 +25,34 @@ if ($zone eq '') {
 	pod2usage(1);
 }
 
-if ($server eq '') {
-	print "pnotify: --server argument is missing or empty\n";
+my $resolver = Net::DNS::Resolver->new;
+
+my @servers;
+if ($srv ne '') {
+	my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
+	if (!$answer) {
+		print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
+		exit(1);
+
+	} elsif ($answer->header->rcode ne 'NOERROR') {
+		print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
+		exit(1);
+
+	} elsif (scalar($answer->answer) < 0) {
+		print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
+		exit(1);
+
+	} else {
+		foreach my $rr ($answer->answer) {
+			push(@servers, $rr->target) if ($rr->type eq 'SRV');
+		}
+	}
+
+} elsif ($server ne '') {
+	push(@servers, $server);
+
+} else {
+	print "pnotify: --server or --srv arguments are missing or empty\n";
 	pod2usage(1);
 }
 
@@ -37,22 +64,26 @@ $packet->header->rcode('NOERROR');
 
 $packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
 
-my $resolver = Net::DNS::Resolver->new;
-$resolver->nameserver($server);
-$resolver->udp_timeout($timeout || 1);
-$resolver->srcaddr($source) if ($source ne '');
-$resolver->port($port // 53);
+my $errors = 0;
+foreach my $server (@servers) {
+	$resolver->nameserver($server);
+	$resolver->udp_timeout($timeout || 1);
+	$resolver->srcaddr($source) if ($source ne '');
+	$resolver->port($port // 53);
 
-my $answer = $resolver->send($packet);
-if ($answer) {
-	print $answer->header->rcode."\n";
-	exit($answer->header->rcode ne 'NOERROR');
+	my $answer = $resolver->send($packet);
+	if ($answer) {
+		printf("%s: %s\n", $server, $answer->header->rcode);
+		$errors++ if ($answer->header->rcode ne 'NOERROR');
 
-} else {
-	print "TIMEOUT\n";
-	exit(1);
+	} else {
+		printf("%s: TIMEOUT\n", $server);
+		$errors++;
 
+	}
 }
+
+exit($errors);
 
 __END__
 
@@ -69,7 +100,10 @@ Options:
 
 	--zone=ZONE		The DNS zone
 	--class=CLASS		The class (default IN)
-	--server=HOST		Host to send the packet to
+	--server=HOST		Host to send the packet to, OR
+	--srv=DOMAIN		FQDN to use to construct _dns._udp SRV query
+				to determine which servers to send the 
+				NOTIFY to
 	--port=PORT 		Destination port to send the packet to (default 53)
 	--timeout=TIMEOUT	Timeout in seconds (default 1)
 	--tsig-name=NAME	Optional TSIG name
@@ -78,15 +112,24 @@ Options:
 	--source=ADDR		Use this source address (optional)
 	--help			Show this help
 
+=head1 SENDING MULTIPLE PACKETS
+
+You can send a NOTIFY to a single host using the --server argument. If you
+provide a value for the --server argumnet, then pnotify will perform a SRV
+lookup and retrieve a list of servers, and send a packet to each.
+
+For example: if you used C<--srv=example.com>, pnotify will perform a SRV
+query for C<_dns._udp.example.com>. A NOTIFY packet will then be sent to
+each host in the response to the SRV query.
+
 =head1 OUTPUT
 
-pnotify will print either the rcode of the server response or "TIMEOUT"
+pnotify will print the rcode of the response from each server or "TIMEOUT"
 to STDOUT.
 
 =head1 EXIT CODE
 
-For a successful transaction (rcode=NOERROR), the exit code will be 0.
-For all other outcomes it will be 1.
+The exit code will be equal to the number of errors observed.
 
 =head1 RATIONALE
 
