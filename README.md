@@ -13,7 +13,9 @@ Options:
                             argument)
     --class=CLASS           The class (default IN)
     --server=HOST           Host to send the packet to, OR
-    --dsync=TYPE            Specify DSYNC type (CDS or CSYNC)
+    --dsync[=TYPE]          Use DSYNC (RFC 9859) to determine the
+                            destination. Specify a value to limit the
+                            notifications to TYPE (either CDS or CSYNC).
     --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
                             to determine which servers to send the
                             NOTIFY to
@@ -31,12 +33,20 @@ Options:
 # SENDING MULTIPLE PACKETS
 
 You can send a NOTIFY to a single host using the --server argument. If
-you provide a value for the --server argumnet, then pnotify will perform
+you provide a value for the --srv argument, then pnotify will perform
 a SRV lookup and retrieve a list of servers, and send a packet to each.
 
 For example: if you used `--srv=example.com`, pnotify will perform a SRV
 query for `_dns._udp.example.com`. A NOTIFY packet will then be sent to
 each host in the response to the SRV query.
+
+## DSYNC support
+
+pnotify supports DSYNC ([RFC 9859](https://www.rfc-editor.org/rfc/rfc9859.html)).
+If you pass the --dsync argument, it will look for the DSYNC endpoint(s)
+published by the parent operator and extract the target(s) and port(s)
+found. You can limit the endpoints that messages are sent to be
+providing a value, either `CDS` or `CSYNC`.
 
 # OUTPUT
 

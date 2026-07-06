@@ -9,7 +9,7 @@ GetOptions(
     'zone=s'            => \$zone,
     'server=s'          => \$server,
     'srv=s'             => \$srv,
-    'dsync=s'           => \$dsync,
+    'dsync:s'           => \$dsync, # optional (hence : not =)
     'class=s'           => \$class,
     'port=i'            => \$port,
     'tsig-name=s'       => \$tsig_name,
@@ -36,7 +36,7 @@ my @servers;
 if ($srv ne '') {
     resolve_srv();
 
-} elsif ($dsync ne '') {
+} elsif ($dsync) {
     resolve_dsync();
 
 } elsif ($server ne '') {
@@ -125,6 +125,11 @@ sub resolve_srv {
 # this implements the procedure in Section 4.1 of RFC 9859
 #
 sub resolve_dsync {
+    if (defined($dsync) && $dsync ne '' && $dsync ne 'CDS' && $dsync ne 'CSYNC') {
+        print "pnotify: invalid --dsync value '$dsync', must be either CDS or CSYNC\n";
+        exit(1);
+    }
+
     my ($name, $name_provided);
 
     if ($_[0]) {
@@ -145,7 +150,7 @@ sub resolve_dsync {
 
     } elsif ($answer->header->rcode eq 'NOERROR' && $answer->header->ancount > 0) {
         foreach my $rr (grep { 'DSYNC' eq $_->type} $answer->answer) {
-            if (1 == $rr->scheme && uc($dsync) eq $rr->rrtype) {
+            if (1 == $rr->scheme && ($dsync eq '' || $dsync eq $rr->rrtype)) {
                 push(@servers, $rr->port == 53 ? $rr->target : [$rr->target, $rr->port]);
             }
         }
@@ -183,7 +188,9 @@ Options:
                             argument)
     --class=CLASS           The class (default IN)
     --server=HOST           Host to send the packet to, OR
-    --dsync=TYPE            Specify DSYNC type (CDS or CSYNC)
+    --dsync[=TYPE]          Use DSYNC (RFC 9859) to determine the
+                            destination. Specify a value to limit the
+                            notifications to TYPE (either CDS or CSYNC).
     --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
                             to determine which servers to send the
                             NOTIFY to
@@ -201,12 +208,20 @@ Options:
 =head1 SENDING MULTIPLE PACKETS
 
 You can send a NOTIFY to a single host using the --server argument. If
-you provide a value for the --server argumnet, then pnotify will perform
+you provide a value for the --srv argument, then pnotify will perform
 a SRV lookup and retrieve a list of servers, and send a packet to each.
 
 For example: if you used C<--srv=example.com>, pnotify will perform a SRV
 query for C<_dns._udp.example.com>. A NOTIFY packet will then be sent to
 each host in the response to the SRV query.
+
+=head2 DSYNC support
+
+pnotify supports DSYNC (L<RFC 9859|https://www.rfc-editor.org/rfc/rfc9859.html>).
+If you pass the --dsync argument, it will look for the DSYNC endpoint(s)
+published by the parent operator and extract the target(s) and port(s)
+found. You can limit the endpoints that messages are sent to be
+providing a value, either C<CDS> or C<CSYNC>.
 
 =head1 OUTPUT
 
