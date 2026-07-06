@@ -6,54 +6,54 @@ use strict;
 
 my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $help);
 GetOptions(
-	'zone=s'	=> \$zone,
-	'server:s'	=> \$server,
-	'srv:s'		=> \$srv,
-	'class:s'	=> \$class,
-	'port:s'	=> \$port,
-	'tsig-name:s'	=> \$tsig_name,
-	'tsig-key:s'	=> \$tsig_key,
-	'timeout:i'	=> \$timeout,
-	'source:s'	=> \$source,
-	'help'		=> \$help,
+    'zone=s'        => \$zone,
+    'server:s'      => \$server,
+    'srv:s'         => \$srv,
+    'class:s'       => \$class,
+    'port:s'        => \$port,
+    'tsig-name:s'   => \$tsig_name,
+    'tsig-key:s'    => \$tsig_key,
+    'timeout:i'     => \$timeout,
+    'source:s'      => \$source,
+    'help'          => \$help,
 ) or pod2usage(1);
 
 pod2usage(1) if ($help);
 
 if ($zone eq '') {
-	print "pnotify: --zone argument is missing or empty\n";
-	pod2usage(1);
+    print "pnotify: --zone argument is missing or empty\n";
+    pod2usage(1);
 }
 
 my $resolver = Net::DNS::Resolver->new;
 
 my @servers;
 if ($srv ne '') {
-	my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
-	if (!$answer) {
-		print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
-		exit(1);
+    my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
+    if (!$answer) {
+        print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
 
-	} elsif ($answer->header->rcode ne 'NOERROR') {
-		print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
-		exit(1);
+    } elsif ($answer->header->rcode ne 'NOERROR') {
+        print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
 
-	} elsif (scalar($answer->answer) < 0) {
-		print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
-		exit(1);
+    } elsif (scalar($answer->answer) < 0) {
+        print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
 
-	} else {
-		foreach my $rr ($answer->answer) {
-			push(@servers, $rr->target) if ($rr->type eq 'SRV');
-		}
-	}
+    } else {
+        foreach my $rr ($answer->answer) {
+            push(@servers, $rr->target) if ($rr->type eq 'SRV');
+        }
+    }
 
 } elsif ($server ne '') {
-	push(@servers, $server);
+    push(@servers, $server);
 
 } else {
-	print "pnotify: --server or --srv arguments are missing or empty\n";
-	pod2usage(1);
+    print "pnotify: --server or --srv arguments are missing or empty\n";
+    pod2usage(1);
 }
 
 my $packet = Net::DNS::Packet->new($zone, 'SOA', ($class || 'IN'));
@@ -66,21 +66,21 @@ $packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '
 
 my $errors = 0;
 foreach my $server (@servers) {
-	$resolver->nameserver($server);
-	$resolver->udp_timeout($timeout || 1);
-	$resolver->srcaddr($source) if ($source ne '');
-	$resolver->port($port // 53);
+    $resolver->nameserver($server);
+    $resolver->udp_timeout($timeout || 1);
+    $resolver->srcaddr($source) if ($source ne '');
+    $resolver->port($port // 53);
 
-	my $answer = $resolver->send($packet);
-	if ($answer) {
-		printf("%s: %s\n", $server, $answer->header->rcode);
-		$errors++ if ($answer->header->rcode ne 'NOERROR');
+    my $answer = $resolver->send($packet);
+    if ($answer) {
+        printf("%s: %s\n", $server, $answer->header->rcode);
+        $errors++ if ($answer->header->rcode ne 'NOERROR');
 
-	} else {
-		printf("%s: TIMEOUT\n", $server);
-		$errors++;
+    } else {
+        printf("%s: TIMEOUT\n", $server);
+        $errors++;
 
-	}
+    }
 }
 
 exit($errors);
@@ -98,19 +98,17 @@ pnotfy [options]
 
 Options:
 
-	--zone=ZONE		The DNS zone
-	--class=CLASS		The class (default IN)
-	--server=HOST		Host to send the packet to, OR
-	--srv=DOMAIN		FQDN to use to construct _dns._udp SRV query
-				to determine which servers to send the 
-				NOTIFY to
-	--port=PORT 		Destination port to send the packet to (default 53)
-	--timeout=TIMEOUT	Timeout in seconds (default 1)
-	--tsig-name=NAME	Optional TSIG name
-	--tsig-key=KEY		Optional TSIG KEY (only HMAC-MD5 is
-				supported)
-	--source=ADDR		Use this source address (optional)
-	--help			Show this help
+    --zone=ZONE         The DNS zone
+    --class=CLASS       The class (default IN)
+    --server=HOST       Host to send the packet to, OR
+    --srv=DOMAIN        FQDN to use to construct _dns._udp SRV query
+                        to determine which servers to send the NOTIFY to
+    --port=PORT         Destination port to send the packet to (default 53)
+    --timeout=TIMEOUT   Timeout in seconds (default 1)
+    --tsig-name=NAME    Optional TSIG name
+    --tsig-key=KEY      Optional TSIG KEY (only HMAC-MD5 is supported)
+    --source=ADDR       Use this source address (optional)
+    --help              Show this help
 
 =head1 SENDING MULTIPLE PACKETS
 
@@ -152,8 +150,8 @@ limited range of prerequisites.
 
 =head1 COPYRIGHT
 
-Copyright 2011 CentralNic Ltd. This program is Free Software, you can
-use it and/or modify it under the same terms as Perl itself.
+Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program is Free
+Software, you can use it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
@@ -166,4 +164,3 @@ use it and/or modify it under the same terms as Perl itself.
 =back
 
 =cut
-
