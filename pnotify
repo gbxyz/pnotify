@@ -4,18 +4,19 @@ use Getopt::Long;
 use Pod::Usage;
 use strict;
 
-my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $help);
+my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $report_channel, $help);
 GetOptions(
-    'zone=s'        => \$zone,
-    'server:s'      => \$server,
-    'srv:s'         => \$srv,
-    'class:s'       => \$class,
-    'port:s'        => \$port,
-    'tsig-name:s'   => \$tsig_name,
-    'tsig-key:s'    => \$tsig_key,
-    'timeout:i'     => \$timeout,
-    'source:s'      => \$source,
-    'help'          => \$help,
+    'zone=s'            => \$zone,
+    'server=s'          => \$server,
+    'srv=s'             => \$srv,
+    'class=s'           => \$class,
+    'port=i'            => \$port,
+    'tsig-name=s'       => \$tsig_name,
+    'tsig-key=s'        => \$tsig_key,
+    'timeout=i'         => \$timeout,
+    'source=s'          => \$source,
+    'report-channel=s'  => \$report_channel,
+    'help'              => \$help,
 ) or pod2usage(1);
 
 pod2usage(1) if ($help);
@@ -62,6 +63,11 @@ $packet->header->aa(1);
 $packet->header->rd(0);
 $packet->header->rcode('NOERROR');
 
+if ($report_channel) {
+    $packet->header->do(1);
+    $packet->edns->option(q{REPORT-CHANNEL} => {q{AGENT-DOMAIN} => $report_channel});
+}
+
 $packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
 
 my $errors = 0;
@@ -98,17 +104,21 @@ pnotfy [options]
 
 Options:
 
-    --zone=ZONE         The DNS zone
-    --class=CLASS       The class (default IN)
-    --server=HOST       Host to send the packet to, OR
-    --srv=DOMAIN        FQDN to use to construct _dns._udp SRV query
-                        to determine which servers to send the NOTIFY to
-    --port=PORT         Destination port to send the packet to (default 53)
-    --timeout=TIMEOUT   Timeout in seconds (default 1)
-    --tsig-name=NAME    Optional TSIG name
-    --tsig-key=KEY      Optional TSIG KEY (only HMAC-MD5 is supported)
-    --source=ADDR       Use this source address (optional)
-    --help              Show this help
+    --zone=ZONE             The DNS zone
+    --class=CLASS           The class (default IN)
+    --server=HOST           Host to send the packet to, OR
+    --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
+                            to determine which servers to send the
+                            NOTIFY to
+    --port=PORT             Destination port to send the packet to
+                            (default 53)
+    --timeout=TIMEOUT       Timeout in seconds (default 1)
+    --tsig-name=NAME        Optional TSIG name
+    --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
+                            supported)
+    --source=ADDR           Use this source address (optional)
+    --report-channel=DOMAIN Specify RFC 9567 report channel (optional)
+    --help                  Show this help
 
 =head1 SENDING MULTIPLE PACKETS
 
