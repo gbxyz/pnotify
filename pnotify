@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use Net::DNS;
 use Getopt::Long;
 use Pod::Usage;
