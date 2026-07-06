@@ -44,6 +44,11 @@ if ($srv ne '') {
 
 }
 
+if (scalar(@servers) < 1) {
+    print "pnotify: no servers found\n";
+    exit(1);
+}
+
 my $packet = Net::DNS::Packet->new($zone, 'SOA', ($class || 'IN'));
 $packet->header->opcode('NS_NOTIFY_OP');
 $packet->header->aa(1);
