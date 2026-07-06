@@ -55,6 +55,7 @@ if ($srv ne '') {
 } else {
     print "pnotify: --server or --srv arguments are missing or empty\n";
     pod2usage(1);
+
 }
 
 my $packet = Net::DNS::Packet->new($zone, 'SOA', ($class || 'IN'));
@@ -65,7 +66,7 @@ $packet->header->rcode('NOERROR');
 
 if ($report_channel) {
     $packet->header->do(1);
-    $packet->edns->option(q{REPORT-CHANNEL} => {q{AGENT-DOMAIN} => $report_channel});
+    $packet->edns->option('REPORT-CHANNEL' => {'AGENT-DOMAIN' => $report_channel});
 }
 
 $packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
