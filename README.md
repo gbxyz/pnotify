@@ -5,18 +5,21 @@ with TSIG support.
 
 # SYNOPSIS
 
-pnotfy \[options\]
+pnotfy \[OPTIONS\] \[ZONE\]
 
 Options:
 
-    --zone=ZONE             The DNS zone
+    --zone=ZONE             The DNS zone (can also be passed as a bare
+                            argument)
     --class=CLASS           The class (default IN)
     --server=HOST           Host to send the packet to, OR
+    --dsync=TYPE            Specify DSYNC type (CDS or CSYNC)
     --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
                             to determine which servers to send the
                             NOTIFY to
     --port=PORT             Destination port to send the packet to
-                            (default 53)
+                            (default 53, ignored if --srv or --dsync are
+                            used)
     --timeout=TIMEOUT       Timeout in seconds (default 1)
     --tsig-name=NAME        Optional TSIG name
     --tsig-key=KEY          Optional TSIG KEY
