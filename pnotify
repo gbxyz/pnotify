@@ -169,8 +169,6 @@ Software, you can use it and/or modify it under the same terms as Perl itself.
 
 =item * L<Net::DNS>
 
-=item * L<https://www.centralnic.com/>
-
 =back
 
 =cut

@@ -65,4 +65,3 @@ Software, you can use it and/or modify it under the same terms as Perl itself.
 # SEE ALSO
 
 - [Net::DNS](https://metacpan.org/pod/Net%3A%3ADNS)
-- [https://www.centralnic.com/](https://www.centralnic.com/)
