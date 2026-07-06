@@ -123,9 +123,9 @@ Options:
 
 =head1 SENDING MULTIPLE PACKETS
 
-You can send a NOTIFY to a single host using the --server argument. If you
-provide a value for the --server argumnet, then pnotify will perform a SRV
-lookup and retrieve a list of servers, and send a packet to each.
+You can send a NOTIFY to a single host using the --server argument. If
+you provide a value for the --server argumnet, then pnotify will perform
+a SRV lookup and retrieve a list of servers, and send a packet to each.
 
 For example: if you used C<--srv=example.com>, pnotify will perform a SRV
 query for C<_dns._udp.example.com>. A NOTIFY packet will then be sent to
@@ -133,8 +133,8 @@ each host in the response to the SRV query.
 
 =head1 OUTPUT
 
-pnotify will print the rcode of the response from each server or "TIMEOUT"
-to STDOUT.
+pnotify will print the rcode of the response from each server or
+"TIMEOUT" to STDOUT.
 
 =head1 EXIT CODE
 
@@ -161,8 +161,9 @@ limited range of prerequisites.
 
 =head1 COPYRIGHT
 
-Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program is Free
-Software, you can use it and/or modify it under the same terms as Perl itself.
+Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program
+is Free Software, you can use it and/or modify it under the same terms
+as Perl itself.
 
 =head1 SEE ALSO
 
