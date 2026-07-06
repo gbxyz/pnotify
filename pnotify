@@ -55,27 +55,32 @@ $packet->header->aa(1);
 $packet->header->rd(0);
 $packet->header->rcode('NOERROR');
 
-if ($report_channel) {
+if ($report_channel ne '') {
     $packet->header->do(1);
     $packet->edns->option('REPORT-CHANNEL' => {'AGENT-DOMAIN' => $report_channel});
 }
 
 if ($tsig_name ne '' && $tsig_key ne '') {
-    my $tsig = Net::DNS::RR->new(
+    $packet->sign_tsig(Net::DNS::RR->new(
         name        => $tsig_name,
         type        => 'TSIG',
         algorithm   => $tsig_alg || 'HMAC-MD5',
         key         => $tsig_key,
-    );
-    $packet->sign_tsig($tsig);
+    ));
 }
 
 my $errors = 0;
 foreach my $server (@servers) {
+    my $use_port = $port;
+
+    if ('ARRAY' eq ref($server)) {
+        ($server, $use_port) = @{$server};
+    }
+
     $resolver->nameserver($server);
     $resolver->udp_timeout($timeout || 1);
     $resolver->srcaddr($source) if ($source ne '');
-    $resolver->port($port // 53);
+    $resolver->port($use_port // 53);
 
     my $answer = $resolver->send($packet);
     if ($answer) {
