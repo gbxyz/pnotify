@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use Net::DNS;
+use Net::DNS 1.55;
 use Getopt::Long;
 use Pod::Usage;
 use strict;
