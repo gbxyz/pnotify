@@ -31,24 +31,7 @@ my $resolver = Net::DNS::Resolver->new;
 
 my @servers;
 if ($srv ne '') {
-    my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
-    if (!$answer) {
-        print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
-        exit(1);
-
-    } elsif ($answer->header->rcode ne 'NOERROR') {
-        print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
-        exit(1);
-
-    } elsif (scalar($answer->answer) < 0) {
-        print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
-        exit(1);
-
-    } else {
-        foreach my $rr ($answer->answer) {
-            push(@servers, $rr->target) if ($rr->type eq 'SRV');
-        }
-    }
+    resolve_srv();
 
 } elsif ($server ne '') {
     push(@servers, $server);
@@ -100,6 +83,27 @@ foreach my $server (@servers) {
 }
 
 exit($errors);
+
+sub resolve_srv {
+    my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
+    if (!$answer) {
+        print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
+
+    } elsif ($answer->header->rcode ne 'NOERROR') {
+        print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
+
+    } elsif (scalar($answer->answer) < 0) {
+        print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
+        exit(1);
+
+    } else {
+        foreach my $rr ($answer->answer) {
+            push(@servers, $rr->target) if ($rr->type eq 'SRV');
+        }
+    }
+}
 
 __END__
 
