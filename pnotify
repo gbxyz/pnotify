@@ -4,7 +4,7 @@ use Getopt::Long;
 use Pod::Usage;
 use strict;
 
-my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $timeout, $source, $report_channel, $help);
+my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $tsig_alg, $timeout, $source, $report_channel, $help);
 GetOptions(
     'zone=s'            => \$zone,
     'server=s'          => \$server,
@@ -13,6 +13,7 @@ GetOptions(
     'port=i'            => \$port,
     'tsig-name=s'       => \$tsig_name,
     'tsig-key=s'        => \$tsig_key,
+    'tsig-alg=s'        => \$tsig_alg,
     'timeout=i'         => \$timeout,
     'source=s'          => \$source,
     'report-channel=s'  => \$report_channel,
@@ -69,7 +70,17 @@ if ($report_channel) {
     $packet->edns->option('REPORT-CHANNEL' => {'AGENT-DOMAIN' => $report_channel});
 }
 
-$packet->sign_tsig($tsig_name, $tsig_key) if ($tsig_name ne '' && $tsig_key ne '');
+if ($tsig_name ne '' && $tsig_key ne '') {
+    my $tsig = Net::DNS::RR->new(
+        name        => $tsig_name,
+        type        => 'TSIG',
+        algorithm   => $tsig_alg || 'HMAC-MD5',
+        key         => $tsig_key,
+    );
+    $packet->sign_tsig($tsig);
+}
+
+print STDERR $packet->string;
 
 my $errors = 0;
 foreach my $server (@servers) {
@@ -115,8 +126,8 @@ Options:
                             (default 53)
     --timeout=TIMEOUT       Timeout in seconds (default 1)
     --tsig-name=NAME        Optional TSIG name
-    --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
-                            supported)
+    --tsig-key=KEY          Optional TSIG KEY
+    --tsig-algorithm=NAME   Optional TSIG algorithm (default HMAC-MD5)
     --source=ADDR           Use this source address (optional)
     --report-channel=DOMAIN Specify RFC 9567 report channel (optional)
     --help                  Show this help

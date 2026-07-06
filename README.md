@@ -19,17 +19,17 @@ Options:
                             (default 53)
     --timeout=TIMEOUT       Timeout in seconds (default 1)
     --tsig-name=NAME        Optional TSIG name
-    --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
-                            supported)
+    --tsig-key=KEY          Optional TSIG KEY
+    --tsig-algorithm=NAME   Optional TSIG algorithm (default HMAC-MD5)
     --source=ADDR           Use this source address (optional)
     --report-channel=DOMAIN Specify RFC 9567 report channel (optional)
     --help                  Show this help
 
 # SENDING MULTIPLE PACKETS
 
-You can send a NOTIFY to a single host using the --server argument. If you
-provide a value for the --server argumnet, then pnotify will perform a SRV
-lookup and retrieve a list of servers, and send a packet to each.
+You can send a NOTIFY to a single host using the --server argument. If
+you provide a value for the --server argumnet, then pnotify will perform
+a SRV lookup and retrieve a list of servers, and send a packet to each.
 
 For example: if you used `--srv=example.com`, pnotify will perform a SRV
 query for `_dns._udp.example.com`. A NOTIFY packet will then be sent to
@@ -37,8 +37,8 @@ each host in the response to the SRV query.
 
 # OUTPUT
 
-pnotify will print the rcode of the response from each server or "TIMEOUT"
-to STDOUT.
+pnotify will print the rcode of the response from each server or
+"TIMEOUT" to STDOUT.
 
 # EXIT CODE
 
@@ -59,8 +59,9 @@ limited range of prerequisites.
 
 # COPYRIGHT
 
-Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program is Free
-Software, you can use it and/or modify it under the same terms as Perl itself.
+Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program
+is Free Software, you can use it and/or modify it under the same terms
+as Perl itself.
 
 # SEE ALSO
 
