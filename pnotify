@@ -4,11 +4,12 @@ use Getopt::Long;
 use Pod::Usage;
 use strict;
 
-my ($zone, $server, $srv, $class, $port, $tsig_name, $tsig_key, $tsig_alg, $timeout, $source, $report_channel, $help);
+my ($zone, $server, $srv, $dsync, $class, $port, $tsig_name, $tsig_key, $tsig_alg, $timeout, $source, $report_channel, $help);
 GetOptions(
     'zone=s'            => \$zone,
     'server=s'          => \$server,
     'srv=s'             => \$srv,
+    'dsync=s'           => \$dsync,
     'class=s'           => \$class,
     'port=i'            => \$port,
     'tsig-name=s'       => \$tsig_name,
@@ -35,11 +36,14 @@ my @servers;
 if ($srv ne '') {
     resolve_srv();
 
+} elsif ($dsync ne '') {
+    resolve_dsync();
+
 } elsif ($server ne '') {
     push(@servers, $server);
 
 } else {
-    print "pnotify: --server or --srv arguments are missing or empty\n";
+    print "pnotify: --server, --srv or --dsync arguments are missing or empty\n";
     pod2usage(1);
 
 }
@@ -117,6 +121,51 @@ sub resolve_srv {
     }
 }
 
+#
+# this implements the procedure in Section 4.1 of RFC 9859
+#
+sub resolve_dsync {
+    my ($name, $name_provided);
+
+    if ($_[0]) {
+        $name = $_[0];
+        $name_provided = 1;
+
+    } else {
+        my @labels = Net::DNS::Domain->new($zone)->label;
+        splice(@labels, 1, 0, '_dysnc');
+        $name = join('.', @labels).'.';
+    }
+
+    my $answer = $resolver->send($name, 'IN', 'DSYNC');
+
+    if (!$answer) {
+        print "pnotify: no answer received when querying for $name/DSYNC\n";
+        exit(1);
+
+    } elsif ($answer->header->rcode eq 'NOERROR' && $answer->header->ancount > 0) {
+        foreach my $rr (grep { 'DSYNC' eq $_->type} $answer->answer) {
+            if (1 == $rr->scheme && uc($dsync) eq $rr->rrtype) {
+                push(@servers, $rr->port == 53 ? $rr->target : [$rr->target, $rr->port]);
+            }
+        }
+
+    } elsif (!$name_provided) {
+        my $parent_len = (Net::DNS::Domain->new([ grep { 'SOA' eq $_->type } $answer->authority ]->[0]->name)->label);
+
+        my @labels = Net::DNS::Domain->new($zone)->label;
+        splice(@labels, 0-$parent_len, 0, '_dysnc');
+        $name = join('.', @labels).'.';
+
+        resolve_dsync($name);
+
+    } else {
+        print "pnotify: no DSYNC endpoint found for $zone\n";
+        exit(1);
+
+    }
+}
+
 __END__
 
 =head1 NAME
@@ -134,11 +183,13 @@ Options:
                             argument)
     --class=CLASS           The class (default IN)
     --server=HOST           Host to send the packet to, OR
+    --dsync=TYPE            Specify DSYNC type (CDS or CSYNC)
     --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
                             to determine which servers to send the
                             NOTIFY to
     --port=PORT             Destination port to send the packet to
-                            (default 53)
+                            (default 53, ignored if --srv or --dsync are
+                            used)
     --timeout=TIMEOUT       Timeout in seconds (default 1)
     --tsig-name=NAME        Optional TSIG name
     --tsig-key=KEY          Optional TSIG KEY
