@@ -9,19 +9,21 @@ pnotfy \[options\]
 
 Options:
 
-        --zone=ZONE             The DNS zone
-        --class=CLASS           The class (default IN)
-        --server=HOST           Host to send the packet to, OR
-        --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
-                                to determine which servers to send the 
-                                NOTIFY to
-        --port=PORT             Destination port to send the packet to (default 53)
-        --timeout=TIMEOUT       Timeout in seconds (default 1)
-        --tsig-name=NAME        Optional TSIG name
-        --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
-                                supported)
-        --source=ADDR           Use this source address (optional)
-        --help                  Show this help
+    --zone=ZONE             The DNS zone
+    --class=CLASS           The class (default IN)
+    --server=HOST           Host to send the packet to, OR
+    --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
+                            to determine which servers to send the
+                            NOTIFY to
+    --port=PORT             Destination port to send the packet to
+                            (default 53)
+    --timeout=TIMEOUT       Timeout in seconds (default 1)
+    --tsig-name=NAME        Optional TSIG name
+    --tsig-key=KEY          Optional TSIG KEY (only HMAC-MD5 is
+                            supported)
+    --source=ADDR           Use this source address (optional)
+    --report-channel=DOMAIN Specify RFC 9567 report channel (optional)
+    --help                  Show this help
 
 # SENDING MULTIPLE PACKETS
 
@@ -51,16 +53,16 @@ limited range of prerequisites.
 
 # REQUIREMENTS
 
-- [Net::DNS](https://metacpan.org/pod/Net::DNS)
-- [Getopt::Long](https://metacpan.org/pod/Getopt::Long)
-- [Pod::Usage](https://metacpan.org/pod/Pod::Usage)
+- [Net::DNS](https://metacpan.org/pod/Net%3A%3ADNS)
+- [Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong)
+- [Pod::Usage](https://metacpan.org/pod/Pod%3A%3AUsage)
 
 # COPYRIGHT
 
-Copyright 2011 CentralNic Ltd. This program is Free Software, you can
-use it and/or modify it under the same terms as Perl itself.
+Copyright 2011-2023 CentralNic Ltd, 2023-2026 Gavin Brown. This program is Free
+Software, you can use it and/or modify it under the same terms as Perl itself.
 
 # SEE ALSO
 
-- [Net::DNS](https://metacpan.org/pod/Net::DNS)
+- [Net::DNS](https://metacpan.org/pod/Net%3A%3ADNS)
 - [https://www.centralnic.com/](https://www.centralnic.com/)
