@@ -80,8 +80,6 @@ if ($tsig_name ne '' && $tsig_key ne '') {
     $packet->sign_tsig($tsig);
 }
 
-print STDERR $packet->string;
-
 my $errors = 0;
 foreach my $server (@servers) {
     $resolver->nameserver($server);
