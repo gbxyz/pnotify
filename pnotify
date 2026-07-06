@@ -22,6 +22,8 @@ GetOptions(
 
 pod2usage(1) if ($help);
 
+$zone ||= shift(@ARGV);
+
 if ($zone eq '') {
     print "pnotify: --zone argument is missing or empty\n";
     pod2usage(1);
@@ -114,11 +116,12 @@ with TSIG support.
 
 =head1 SYNOPSIS
 
-pnotfy [options]
+pnotfy [OPTIONS] [ZONE]
 
 Options:
 
-    --zone=ZONE             The DNS zone
+    --zone=ZONE             The DNS zone (can also be passed as a bare
+                            argument)
     --class=CLASS           The class (default IN)
     --server=HOST           Host to send the packet to, OR
     --srv=DOMAIN            FQDN to use to construct _dns._udp SRV query
