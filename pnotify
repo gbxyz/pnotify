@@ -29,7 +29,7 @@ if ($zone eq '') {
     pod2usage(1);
 }
 
-my $resolver = Net::DNS::Resolver->new;
+my $resolver = Net::DNS::Resolver->new(dnssec => 1);
 
 my @servers;
 if ($srv ne '') {
