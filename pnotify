@@ -106,13 +106,13 @@ sub resolve_srv {
         print "pnotify: received ".$answer->header->rcode." when querying for _dns._udp.$srv/SRV\n";
         exit(1);
 
-    } elsif (scalar($answer->answer) < 0) {
+    } elsif ($answer->header->ancount < 0) {
         print "pnotify: received no answer records when querying for _dns._udp.$srv/SRV\n";
         exit(1);
 
     } else {
-        foreach my $rr ($answer->answer) {
-            push(@servers, $rr->target) if ($rr->type eq 'SRV');
+        foreach my $rr (grep { 'SRV' eq $_->type} $answer->answer) {
+            push(@servers, $rr->port == 53 ? $rr->target : [$rr->target, $rr->port]);
         }
     }
 }
