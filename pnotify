@@ -97,7 +97,7 @@ foreach my $server (@servers) {
 exit($errors);
 
 sub resolve_srv {
-    my $answer = $resolver->query('_dns._udp.'.$srv, 'SRV');
+    my $answer = $resolver->send('_dns._udp.'.$srv, 'SRV');
     if (!$answer) {
         print "pnotify: no answer received when querying for _dns._udp.$srv/SRV\n";
         exit(1);
